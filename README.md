@@ -21,6 +21,6 @@ Extra flags can be used. See `python search_europe.py --help`
 - --file_format: Specify the file format for the json files to saved in (Must be enclosed with single speech marks and contain ${country} in the name
 - --map_name: Specify what you want the map to be called, must have an html extension
 
-Example Usuage: `python test.py --api_keys=Ya5iR7a9gTk,crrPE6e6g4d --tags man_made=street_cabinet,street_cabinet=fiber --map_name map2.html --file_format '${country}_fiber_cabinets.json' `
+Example Usuage: `python test.py --api_keys=api_key1,api_key2 --tags man_made=street_cabinet,street_cabinet=fiber --map_name map2.html --file_format '${country}_fiber_cabinets.json' `
 
 Json files containing the data will be saved in the Utility folder, A map will be generated as an html file showing the coverage of the search
