@@ -4,7 +4,7 @@ import json
 import collections
 import requests
 import shapely
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, Union
 from country_list import countries_for_language
 from countrygroups import EUROPEAN_UNION
 from string import Template
@@ -66,12 +66,16 @@ def download_geojson(
     max_lon: float,
     max_lat: float,
     tags: str,
-    api_keys: List,
+    api_keys: Union[List, str],
 ) -> Tuple[Dict, Optional[str]]:
     """rotate api_keys and get data"""
     try:
-        api_keys.rotate()
-        api_key = api_keys[0]
+        if isinstance(api_keys, collections.deque):
+            api_keys.rotate()
+            api_key = api_keys[0]
+        else:
+            api_key = api_keys
+
         logging.info("Using Api Key %s" % api_key)
         params = {
             "tags": tags,
@@ -233,6 +237,11 @@ def main(api_keys: List, tags: str, file_format: str, map_name: str) -> None:
                 if not errors:
                     tbox_json_data["features"].append(bbox_json_data["features"])
                     logging.info("Retrieved Bottom box, joining data for both boxes")
+                    write_to_file(file.substitute(country=country), tbox_json_data)
+                else:
+                    logging.info(
+                        "Could not retrieve Bottom box, writing out data for top box"
+                    )
                     write_to_file(file.substitute(country=country), tbox_json_data)
             else:
                 logging.error("Error: %s with Top box for %s" % (tbox_errors, country))
