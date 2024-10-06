@@ -1,0 +1,5 @@
+countrygroups==0.13.0
+country_list==1.1.0
+geopy==2.4.1
+folium==0.17.0
+shapely==2.0.6
