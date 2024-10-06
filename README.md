@@ -28,3 +28,14 @@ Example Usuage: `python test.py --api_keys=api_key1,api_key2 --tags man_made=str
 Json files containing the data will be saved in the Utility folder, A map will be generated as an html file showing the coverage of the search
 
 ### Individual Place/Country Search
+
+1. With an Open Terminal and an active virtual environment as described in the set-up. Change directory to the utilities folder `cd Utilities` or `dir Utilities`
+2. Run the script with `python search.py --api_key=api_key --place Newcastle --file test.json`
+
+Extra flags can be used. See `python search.py --help`  
+- --api_key : Specify an API Key to be used (only one)
+- --tags : Specify tags to be used, separated with a comma 
+- --file: File to save json as
+- --place: Place or Country name (even a street address or postcode)
+- --map_name: Specify what you want the map to be called, must have an html extension
+
