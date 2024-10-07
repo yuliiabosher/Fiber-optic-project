@@ -110,6 +110,7 @@ def main(api_key: List, place: str, tags: str, file: str, map_name: str) -> None
             "Coordinates of Top Box for %s (%s,%s,%s,%s)"
             % (place, tbox_min_lon, tbox_max_lon, tbox_min_lat, tbox_max_lat)
         )
+        sys.exit(0)
     if not errors:
         logging.info("Wrote search results for %s to file %s" % (place, file))
         top_box, bottom_box, median_coords = split_box(
