@@ -1,0 +1,6 @@
+/env
+.coverage
+**/__pycache__
+*.pyc
+*.swp
+*.zip
