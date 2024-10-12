@@ -1,6 +1,6 @@
 import logging
 import json
-from utilities.get_data import downloader
+from utilities.get_data import downloader, unzip
 import os
 import sys
 
@@ -22,10 +22,24 @@ if __name__ == "__main__":
 
     if not os.path.exists(data_folder):
         os.mkdir(data_folder)
-    breakpoint()
+
     for filename, link in sources.items():
         filename = os.path.join(data_folder, filename)
         logging.info("Downloading %s" % link)
-        _, errors = downloader(filename, link)
-        if not errors:
-            logging.info("Saved as %s" % filename)
+        if not os.path.exists(filename):
+            _, errors = downloader(filename, link)
+            if not errors:
+                logging.info("Saved as %s" % filename)
+
+            if filename.endswith("zip"):
+                logging.info("Unzipping %s" % filename)
+                _, errors = unzip(filename, data_folder)
+                if not errors:
+                    logging.info("Unzipped %s" % filename)
+                elif errors:
+                    logging.error(
+                        "An Error Occured While Unzipping %s : %s" % (filename, errors)
+                    )
+
+        else:
+            logging.info("File %s Exists, Not Downloading Again" % filename)

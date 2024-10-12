@@ -3,6 +3,7 @@ from typing import Optional
 from fake_useragent import UserAgent
 from tqdm.auto import tqdm
 from typing import Optional, Tuple
+from zipfile import ZipFile as zf
 
 
 class ProgressBar(tqdm):
@@ -28,4 +29,16 @@ def downloader(filename: str, link: str) -> Tuple[bool, Optional[str]]:
             progress_bar.total = progress_bar.n
     except Exception as error:
         return False, error
+    return True, None
+
+
+def unzip(filename: str, directory: str) -> Tuple[bool, Optional[str]]:
+    try:
+        with zf(filename) as zip_file:
+            for file in tqdm(
+                iterable=zip_file.namelist(), total=len(zip_file.namelist())
+            ):
+                zip_file.extract(member=file, path=directory)
+    except Exception as e:
+        return False, e
     return True, None
