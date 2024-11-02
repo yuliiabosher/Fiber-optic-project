@@ -1,0 +1,8 @@
+werkzeug
+numpy
+flask[async]
+folium
+geopandas
+pandas
+zappa
+matplotlib

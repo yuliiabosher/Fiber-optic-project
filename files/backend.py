@@ -1,0 +1,208 @@
+import os
+import geopandas as gpd
+import pandas as pd
+import matplotlib.pyplot as plt
+import string
+import folium
+import folium.plugins
+from typing import Optional, Union
+import boto3
+from datetime import datetime
+import numpy as np
+from branca.colormap import linear
+
+
+#########################
+#                      Backend                              #
+#########################
+class Backend:
+    def get_constituencies(self) -> gpd.geodataframe.GeoDataFrame:
+        constituencies = gpd.read_file(
+            "files/data/Westminster_Parliamentary_Constituencies_Dec_2021_UK_BUC_2022_-8882165546947265805.zip"
+        )
+        constituencies["PCON21NM"] = constituencies["PCON21NM"].str.upper().str.strip()
+        return constituencies[["PCON21CD", "PCON21NM", "geometry"]]
+
+    def get_ofcom_full_fibre(self, file: str) -> pd.core.frame.DataFrame:
+        ofcom_df = pd.read_csv(file, encoding="latin")
+        ofcom_df.rename(
+            columns={
+                "parl_const_name": "parliamentary_constituency_name",
+                "FTTP availability (Count premises)": "Number of premises with Full Fibre availability",
+            },
+            inplace=True,
+        )
+        ofcom_full_fibre_df = ofcom_df[
+            [
+                "parliamentary_constituency_name",
+                "All Premises",
+                "Number of premises with Full Fibre availability",
+            ]
+        ]
+        if (
+            ofcom_full_fibre_df["parliamentary_constituency_name"]
+            .str.contains("YNYS MÃN")
+            .any()
+        ):
+            index = ofcom_full_fibre_df[
+                ofcom_full_fibre_df["parliamentary_constituency_name"].str.contains(
+                    "YNYS MÃN"
+                )
+            ].index[0]
+            ofcom_full_fibre_df.loc[index, "parliamentary_constituency_name"] = (
+                "YNYS MÔN"
+            )
+        ofcom_full_fibre_df["parliamentary_constituency_name"] = (
+            ofcom_full_fibre_df["parliamentary_constituency_name"]
+            .str.upper()
+            .str.strip()
+        )
+        return ofcom_full_fibre_df
+
+    def merge_ofcom_with_constituencies(
+        self,
+        ofcom: pd.core.frame.DataFrame,
+        constituencies: gpd.geodataframe.GeoDataFrame,
+    ):
+        fibre_by_constituency_geo_df = constituencies.merge(
+            ofcom, left_on="PCON21NM", right_on="parliamentary_constituency_name"
+        )
+        fibre_by_constituency_geo_df.drop("PCON21NM", axis=1, inplace=True)
+        fibre_by_constituency_geo_df.columns = [
+            "Constituency Code",
+            "geometry",
+            "Constituency Name",
+            "Total Premises",
+            "Premises with Full Fibre Availability",
+        ]
+        fibre_by_constituency_geo_df[
+            "Percentage of Premises with Full Fibre Availability"
+        ] = (
+            fibre_by_constituency_geo_df["Premises with Full Fibre Availability"]
+            / fibre_by_constituency_geo_df["Total Premises"]
+        )
+        return fibre_by_constituency_geo_df
+
+    def make_choropleth(
+        self,
+        df: pd.core.frame.DataFrame,
+        column: str,
+        title: str,
+        year: int,
+        del_color_scale: bool,
+    ) -> folium.Choropleth:
+        choropleth = folium.Choropleth(
+            geo_data=df,
+            data=df[column],
+            columns=[column],
+            key_on="feature.id",
+            nan_fill_color="purple",
+            fill_opacity=0.3,
+            line_opacity=0.1,
+            legend_name=title,
+            name=f"%s (%s)" % (title, year),
+        )
+        setattr(choropleth.color_scale, "text_color", "red")
+        if del_color_scale:
+            for child in choropleth._children:
+                if child.startswith("color_map"):
+                    del choropleth._children[child]
+        return choropleth
+
+    def get_choropleth_for_full_fibre_availability(
+        self, year: int, del_color_scale: bool = False
+    ) -> Optional[folium.Choropleth]:
+        constituencies = self.get_constituencies()
+        link = "https://raw.githubusercontent.com/yuliiabosher/Fiber-optic-project/refs/heads/parliamentary-constituencies"
+        filename = string.Template("${year}${n}_fixed_pcon_coverage_r${r}.csv")
+        files = {
+            2018: filename.substitute(year=2018, n="09", r="01"),
+            2019: filename.substitute(year=2019, n="09", r="01"),
+            2020: filename.substitute(year=2020, n="09", r="01"),
+            2021: filename.substitute(year=2021, n="09", r="01"),
+            2022: filename.substitute(year=2022, n="09", r="02"),
+            2024: filename.substitute(year=2024, n="01", r="01"),
+        }
+        if year not in files:
+            return None
+
+        link_to_file = os.path.join(link, files[year])
+        ofcom = self.get_ofcom_full_fibre(link_to_file)
+        fibre_by_constituency_geo_df = self.merge_ofcom_with_constituencies(
+            ofcom, constituencies
+        )
+        choropleth = self.make_choropleth(
+            fibre_by_constituency_geo_df,
+            "Percentage of Premises with Full Fibre Availability",
+            "Full Fibre Availability",
+            year,
+            del_color_scale,
+        )
+        return choropleth
+
+    def get_choropleth_for_full_fibre_availability_with_slider(
+        self,
+    ) -> Optional[folium.plugins.TimeSliderChoropleth]:
+        constituencies = self.get_constituencies()
+        link = "https://raw.githubusercontent.com/yuliiabosher/Fiber-optic-project/refs/heads/parliamentary-constituencies"
+        filename = string.Template("${year}${n}_fixed_pcon_coverage_r${r}.csv")
+        files = {
+            2018: filename.substitute(year=2018, n="09", r="01"),
+            2019: filename.substitute(year=2019, n="09", r="01"),
+            2020: filename.substitute(year=2020, n="09", r="01"),
+            2021: filename.substitute(year=2021, n="09", r="01"),
+            2022: filename.substitute(year=2022, n="09", r="02"),
+            2024: filename.substitute(year=2024, n="01", r="01"),
+        }
+
+        dfs = []
+        for year in files.keys():
+            link_to_file = os.path.join(link, files[year])
+            ofcom = self.get_ofcom_full_fibre(link_to_file)
+            merged_ofcom = self.merge_ofcom_with_constituencies(ofcom, constituencies)
+            # Add datetime column
+            merged_ofcom["year"] = [
+                int(datetime(year, 1, 1).timestamp()) for i in range(ofcom.shape[0])
+            ]
+            # append df to list of dfs
+            dfs.append(merged_ofcom)
+
+        merged = gpd.GeoDataFrame(data=pd.concat(dfs))
+        # get min , max value of full fibre availability percentage
+        min_color = merged["Percentage of Premises with Full Fibre Availability"].min()
+        max_color = merged["Percentage of Premises with Full Fibre Availability"].max()
+
+        # Create a color scale from the min and max of the values
+        cmap = linear.PuRd_09.scale(min_color, max_color)
+        merged["opacity"] = [0.5 for i in range(merged.shape[0])]
+        merged["color"] = merged[
+            "Percentage of Premises with Full Fibre Availability"
+        ].apply(cmap)
+
+        # Get unique set of geometries, with constituency as the index
+        gdf = merged.drop_duplicates("Constituency Code")[
+            ["Constituency Code", "geometry"]
+        ]
+        gdf.set_index("Constituency Code", drop=True, inplace=True)
+
+        # group by constiuency
+        grouped_by = merged.groupby("Constituency Code")
+
+        # make a style dict with datetime, opacity and color for each entry in the group, indexed by constituency
+        styledata = dict()
+        for constituency in gdf.index:
+            group = grouped_by.get_group(constituency)
+            group = group[["year", "opacity", "color"]]
+            group.set_index("year", drop=True, inplace=True)
+            styledata[constituency] = group
+
+        # Use a dict comprehension to turn the dfs into dictionaries, maintaining the original key
+        styledict = {
+            constituency: data.to_dict(orient="index")
+            for constituency, data in styledata.items()
+        }
+
+        choropleth_with_slider = folium.plugins.TimeSliderChoropleth(
+            data=gdf, styledict=styledict
+        )
+        return choropleth_with_slider
