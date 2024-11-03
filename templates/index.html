@@ -14,27 +14,35 @@
 		<nav class="sb-topnav navbar navbar-expand navbar-dark bg-primary p-4 border border-warning fixed-top">
 		</nav>
 
-		<div class="container-fluid border border-danger" style="height:100">
-			<div class="row border border-warning">
-				<div class="col border border-success p-5 ">
+		<div class="container-fluid border" style="height:100">
+			<div class="row border">
+				<div class="col border p-5 ">
 				 <small class="text-success"><u>Distribution of Fibre in the UK between 2018-2024 by constituency</u></small><br>
 				 {{ body_html2|safe}}
 				</div>
-				<div class="col p-5">
+				<div class="col p-5 border">
 				 <small class="text-success"><u>Distribution of Fibre in the UK between 2018-2024 by constituency</u></small>
 				 {{ body_html|safe}}
 				</div>
 				<div class="col p-5">
-					<br>
-					<p class="pt-2">Just a quick of example of 2 maps, the first one is a choropleth map , where the slider can be moved back and forth to show distribution</p>
-					<p class="pt-2"> The second map, just playing around with this one, we can use it for different things but just because the data was there I used the same data from the first map. Basically, we can click the layer icon and then click the years values on or off and swap between dark and light</p>
-				</div>
-				<div class="col p-5">
-					<p class="pt-5"> Next step will be to also get some animated graphs on here. We arent limited to just splashing things on the screen. We can organise it all by tabs etc later</p>
-					<p class="pt-5"> Also maybe make the blue header and footers into buttons so it can be clicked to move the screen up and down to view each row of visualizations</p>
+					<p >Just a quick of example of 2 maps, the first one is a choropleth map , where the slider can be moved back and forth to show distribution</p>
+					<p > The second map, just playing around with this one, we can use it for different things but just because the data was there I used the same data from the first map. Basically, we can click the layer icon and then click the years values on or off and swap between dark and light</p>
+					<p > Also maybe make the blue header and footers into buttons so it can be clicked to move the screen up and down to view each row of visualizations</p>
+					SCROLL FOR GRAPHS
 				</div>
 			</div>
+			<div class="row border">
+			{% for graph in graphs %}
+				{% if loop.index%3 == 0 %}
+					</div>
+					<div class="row border">
+				{% endif %}
+				<div class="col p-5 border">
+					{{graph|safe}}
+				</div>
+			{% endfor %}
 		</div>
+	</div>
 		<footer class="d-flex flex-column flex-md-row bg-primary fixed-bottom p-4 border border-warning">
 		</footer>
 		<script>

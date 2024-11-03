@@ -64,10 +64,12 @@ def index():
         height=800,
         width=500,
     )
-    for n, year in enumerate(range(2018, 2025)):
-        choropeth = bkd.get_choropleth_for_full_fibre_availability(year, n)
-        if choropeth:
-            choropeth.add_to(m)
+    for n, choropleth_data in enumerate(bkd.choropleth_data):
+
+        if choropleth_data:
+            choropleth = choropleth_data[0]
+            choropleth.add_to(m)
+
     folium.TileLayer(tiles="Cartodb dark_matter", name="dark").add_to(m)
     folium.LayerControl().add_to(m)
     m.get_root().width = "500px"
@@ -77,8 +79,8 @@ def index():
     m2 = folium.Map(
         location=[54.7023545, -3.2765753], zoom_start=6, height=800, width=500
     )
-    choropleth_with_slider = (
-        bkd.get_choropleth_for_full_fibre_availability_with_slider()
+    choropleth_with_slider = bkd.get_choropleth_for_full_fibre_availability_with_slider(
+        bkd.choropleth_data
     )
     choropleth_with_slider.add_to(m2)
 
@@ -87,9 +89,7 @@ def index():
     body_html2 = m2.get_root()._repr_html_()
 
     return render_template(
-        "index.html",
-        body_html=body_html,
-        body_html2=body_html2,
+        "index.html", body_html=body_html, body_html2=body_html2, graphs=bkd.graphs
     )
 
 

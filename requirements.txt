@@ -6,3 +6,4 @@ geopandas
 pandas
 zappa
 matplotlib
+seaborn
