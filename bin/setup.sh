@@ -18,7 +18,7 @@ python3.11 -m pip install pyftpdlib
 
 #install dependency requirements
 requirements=$HOME/Fiber-optic-project/requirements.txt
-sudo python3.11 -m pip install -r requirements
+sudo python3.11 -m pip install -r $requirements
 
 #copy service so that the system can see it
 sudo cp /etc/systemd/system /etc/systemd/system
