@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=ubuntu
 WorkingDirectory=/home/$user/Fiber-optic-project
-ExecStart="/home/$user/Fiber-optic-project/bin/run.sh $user"
+ExecStart="/run.sh"
 Restart=always
 
 [Install]

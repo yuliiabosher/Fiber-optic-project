@@ -22,9 +22,11 @@ sudo python3.11 -m pip install -r $requirements
 
 #Change filepath in dashboard.service to point directly at  the user who installs it , which should be the same user that runs it
 sed -i 's/$user/'$user/ /$HOME/Fiber-optic-project/bin/dashboard.service
-
+sed -i 's/$user/'$user/ /$HOME/Fiber-optic-project/bin/run.sh
+sudo chmod +x  /home/$user/Fiber-optic-project/bin/run.sh
 #copy service so that the system can see it
 sudo cp /home/$user/Fiber-optic-project/bin/dashboard.service /etc/systemd/system
+sudo cp /home/$user/Fiber-optic-project/bin/run.sh /
 
 #reload systemd to see the copied file
 sudo systemctl daemon-reload
