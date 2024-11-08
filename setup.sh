@@ -16,4 +16,4 @@ sudo apt install python3-pip
 python3.11 -m pip install pyftpdlib
 
 #install dependency requirements
-python3.11 -m pip install -r $HOME/dashboard/requirements.txt
+python3.11 -m pip install -r $HOME/Fiber-optic-project/requirements.txt
