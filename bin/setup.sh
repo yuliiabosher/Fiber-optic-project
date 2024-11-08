@@ -20,15 +20,24 @@ python3.11 -m pip install pyftpdlib
 requirements=$HOME/Fiber-optic-project/requirements.txt
 sudo python3.11 -m pip install -r $requirements
 
+#Change filepath in dashboard.service to point directly at  the user who installs it , which should be the same user that runs it
+sed -i 's/$user/'$user/ /$HOME/Fiber-optic-project/bin/dashboard.service
+
 #copy service so that the system can see it
 sudo cp /home/$user/Fiber-optic-project/bin/dashboard.service /etc/systemd/system
-
-#Change filepath in dashboard.service to point directly at  the user who installs it , which should be the same user that runs it
-sudo sed -i 's/$user/'$user/ /etc/systemd/dashboard.service
 
 #reload systemd to see the copied file
 sudo systemctl daemon-reload
  
- #enable and start the service
+#enable and start the service
 sudo systemctl enable dashboard.service
 sudo systemctl start dashboard.service
+
+#checkout changes to revert back to before the service was changed
+#changes not needed anymore as it has been copied
+#Plus future automated pulls from git would be prevented if we make changes without commiting them
+#so lets just checkout the original files
+git -C  $HOME/Fiber-optic-project/ reset .
+git -C  $HOME/Fiber-optic-project/ checkout .
+
+
