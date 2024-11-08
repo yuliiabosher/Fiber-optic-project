@@ -21,10 +21,10 @@ requirements=$HOME/Fiber-optic-project/requirements.txt
 sudo python3.11 -m pip install -r $requirements
 
 #copy service so that the system can see it
-sudo cp /etc/systemd/system /etc/systemd/system
+sudo cp /home/$user/Fiber-optic-project/bin/dashboard.service /etc/systemd/system
 
 #Change filepath in dashboard.service to point directly at  the user who installs it , which should be the same user that runs it
-sed -i 's/$user/'$user/ /etc/systemd/dashboard.service
+sudo sed -i 's/$user/'$user/ /etc/systemd/dashboard.service
 
 #reload systemd to see the copied file
 sudo systemctl daemon-reload
