@@ -1,0 +1,12 @@
+[Unit]
+Description=Dashboard
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/$user/Fiber-optic-project
+ExecStart=/home/$user/Fiber-optic-project/bin/run.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
