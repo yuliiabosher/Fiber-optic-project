@@ -1,29 +1,34 @@
-user=$USER
-#SET-UP ZeroTier for ftp
-curl -s 'https://raw.githubusercontent.com/zerotier/ZeroTierOne/main/doc/contact%40zerotier.com.gpg' | gpg --import && \  
-if z=$(curl -s 'https://install.zerotier.com/' | gpg); then echo "$z" | sudo bash; fi
-
-#Join Zerotier network
-sudo zerotier-cli join 856127940c728cdd
-
 #Fail if any command executes with a non-zero status
 set -e
 
-#install pip and python3.11
-sudo apt install python3.11*
-sudo apt install python3-pip
+user=$USER
+usb=6D2B02C137685C07
 
-#install pyftpdlib for running an ftpserver when needed
-python3.11 -m pip install pyftpdlib
+# Add Docker's official GPG key:
+sudo apt-get update -y
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/raspbian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-#install dependency requirements
-requirements=$HOME/Fiber-optic-project/requirements.txt
-sudo python3.11 -m pip install -r $requirements
+# Set up Docker's APT repository:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/raspbian \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+
+#install the latest docker version
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 #Change filepath in dashboard.service to point directly at  the user who installs it , which should be the same user that runs it
 sed -i 's/$user/'$user/ /$HOME/Fiber-optic-project/bin/dashboard.service
 sed -i 's/$user/'$user/ /$HOME/Fiber-optic-project/bin/run.sh
+sed -i 's/$user/'$user/ /$HOME/Fiber-optic-project/Dockerfile
+sed -i 's/$usb/'$usb/ /$HOME/Fiber-optic-project/Dockerfile
+
 sudo chmod +x  /home/$user/Fiber-optic-project/bin/run.sh
+
 #copy service so that the system can see it
 sudo cp /home/$user/Fiber-optic-project/bin/dashboard.service /etc/systemd/system
 sudo cp /home/$user/Fiber-optic-project/bin/run.sh /
@@ -42,4 +47,4 @@ sudo systemctl start dashboard.service
 git -C  $HOME/Fiber-optic-project/ reset .
 git -C  $HOME/Fiber-optic-project/ checkout .
 
-
+/home/$user/Fiber-optic-project/
