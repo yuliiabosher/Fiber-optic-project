@@ -1,16 +1,18 @@
 FROM python:3.11.9-slim-bullseye
 
-WORKDIR /app
-ENV PYTHONPATH=src
+WORKDIR /var/www/html
+ENV PYTHONPATH=/var/www/html/
 
 RUN apt-get update && \
     apt-get install --yes --no-install-recommends git
 
-COPY requirements.txt ./
+RUN  git clone https://github.com/yuliiabosher/Fiber-optic-project.git
+RUN git branch dashboard-example
+RUN git switch dashboard-example
+RUN git pull dashboard-example
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY src ./src
 
 EXPOSE 8000
 
