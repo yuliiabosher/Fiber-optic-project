@@ -2,6 +2,8 @@
 set -e
 
 user=$USER
+
+#name of usb where data files are stored
 usb=6D2B02C137685C07
 
 # Add Docker's official GPG key:
@@ -47,4 +49,4 @@ sudo systemctl start dashboard.service
 git -C  $HOME/Fiber-optic-project/ reset .
 git -C  $HOME/Fiber-optic-project/ checkout .
 
-/home/$user/Fiber-optic-project/
+#This script is no longer needed since we moved to balena,but keeping it just in case we need it in the future
