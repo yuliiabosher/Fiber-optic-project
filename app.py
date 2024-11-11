@@ -93,4 +93,4 @@ def index():
 
 
 if __name__ == "__main__":
-    application.run(host="0.0.0.0", port=443, debug=True)#, ssl_context=("files/data/cert.pem","files/data/key.pem"))
+    application.run(host="0.0.0.0", port=443, debug=True, ssl_context=("files/data/cert.pem","files/data/key.pem"))
