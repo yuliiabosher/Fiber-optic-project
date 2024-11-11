@@ -5,7 +5,8 @@ ENV UDEV=on
 RUN apt-get update
 
 RUN apt-get update && \
-    apt-get install --yes --no-install-recommends git
+    apt-get install --yes --no-install-recommends git && \
+    apt-get install --yes --no-install-recommends bash
 
 RUN  git clone https://github.com/yuliiabosher/Fiber-optic-project.git -b dashboard-example /var/www/html
 
@@ -18,4 +19,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 443
 
-CMD [ "/var/www/html/bin/balena_run.sh"]
+CMD ["bash" , "/var/www/html/bin/balena_run.sh"]
