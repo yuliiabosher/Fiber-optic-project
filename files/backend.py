@@ -33,7 +33,7 @@ class Backend:
                 self.get_choropleth_for_full_fibre_availability(year, n)
             )
 
-        data_dir = "files/data/"
+        data_dir = "data/"
         files = dict(
             postcode=(
                 "%s/ONSPD_FEB_2024_UK/Data/ONSPD_FEB_2024_UK.csv" % data_dir,

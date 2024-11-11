@@ -21,7 +21,7 @@ from files.backend import Backend
 environment = os.getenv("FLASK_ENV", "development")
 application = Flask(__name__, template_folder="templates", static_folder="static")
 
-#bkd = Backend()
+bkd = Backend()
 
 ###############
 # API Helpers
