@@ -45,6 +45,8 @@ def build_error(message, status_code):
 ###############
 @application.route("/hc")
 def health_check():
+    import os
+    print(os.getcwd())
     return Response("{}", status=200)
 
 
