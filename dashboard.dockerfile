@@ -17,6 +17,6 @@ RUN git pull origin dashboard-example
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 80
+EXPOSE 443
 
 CMD ["bash" , "/var/www/html/bin/balena_run.sh"]
