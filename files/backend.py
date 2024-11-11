@@ -96,7 +96,7 @@ class Backend:
 
     def get_constituencies(self) -> gpd.geodataframe.GeoDataFrame:
         constituencies = gpd.read_file(
-            "files/data/Westminster_Parliamentary_Constituencies_Dec_2021_UK_BUC_2022_-8882165546947265805.zip"
+            "data/Westminster_Parliamentary_Constituencies_Dec_2021_UK_BUC_2022_-8882165546947265805.zip"
         )
         constituencies["PCON21NM"] = constituencies["PCON21NM"].str.upper().str.strip()
         return constituencies[["PCON21CD", "PCON21NM", "geometry"]]
