@@ -1,7 +1,6 @@
 #!/bin/bash
 
 #pull any updates before starting the server
-branch="dashboard-example"
 git -C  /var/www/html/ pull switch $branch
 git -C  /var/www/html/ pull origin $branch
 
