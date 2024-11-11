@@ -18,6 +18,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 443
 
-CMD ["mount","/dev/sda1/", "files/data","&&","python3"]
-#ENTRYPOINT [ "flask" ]
-#CMD [ "run", "-p", "443", "--host","0.0.0.0"]
+CMD [ "/var/www/html/bin/balena_run.sh"]
