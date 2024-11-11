@@ -7,4 +7,4 @@ services:
         dockerfile: dashboard.dockerfile
     privileged: true
     ports: 
-        - "443:443"
+        - "80:80"
