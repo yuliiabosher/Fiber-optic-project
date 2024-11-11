@@ -25,18 +25,15 @@ import base64
 #########################
 class Backend:
     def __init__(self):
-        import os
-        print(os.getcwd())
-        print(os.listdir("."))
         # Short on memory, so lets load everything here so that it is only loaded once, at runtime
         # This will allow the for the page to load quicker too
-        '''self.choropleth_data = []
+        self.choropleth_data = []
         for n, year in enumerate(range(2018, 2025)):
             self.choropleth_data.append(
                 self.get_choropleth_for_full_fibre_availability(year, n)
             )
 
-        data_dir = "data/"
+        data_dir = "files/data/"
         files = dict(
             postcode=(
                 "%s/ONSPD_FEB_2024_UK/Data/ONSPD_FEB_2024_UK.csv" % data_dir,
@@ -96,11 +93,10 @@ class Backend:
                 df_combined_ONS_OFCOM
             )
         )
-        '''
 
     def get_constituencies(self) -> gpd.geodataframe.GeoDataFrame:
         constituencies = gpd.read_file(
-            "data/Westminster_Parliamentary_Constituencies_Dec_2021_UK_BUC_2022_-8882165546947265805.zip"
+            "files/data/Westminster_Parliamentary_Constituencies_Dec_2021_UK_BUC_2022_-8882165546947265805.zip"
         )
         constituencies["PCON21NM"] = constituencies["PCON21NM"].str.upper().str.strip()
         return constituencies[["PCON21CD", "PCON21NM", "geometry"]]

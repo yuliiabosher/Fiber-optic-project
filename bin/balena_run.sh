@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #pull any updates before starting the server
+git -C  /var/www/html/ switch $main #switch back to a default repo so that we arent carrying redundant files forward
 git -C  /var/www/html/ branch $branch #silently fail if branch already exists, not important, no overwrite can happen and no push permissions
 git -C  /var/www/html/ switch $branch
 git -C  /var/www/html/ pull origin $branch
