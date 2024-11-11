@@ -25,9 +25,12 @@ import base64
 #########################
 class Backend:
     def __init__(self):
+        import os
+        print(os.getcwd())
+        print(os.listdir("."))
         # Short on memory, so lets load everything here so that it is only loaded once, at runtime
         # This will allow the for the page to load quicker too
-        self.choropleth_data = []
+        '''self.choropleth_data = []
         for n, year in enumerate(range(2018, 2025)):
             self.choropleth_data.append(
                 self.get_choropleth_for_full_fibre_availability(year, n)
@@ -93,6 +96,7 @@ class Backend:
                 df_combined_ONS_OFCOM
             )
         )
+        '''
 
     def get_constituencies(self) -> gpd.geodataframe.GeoDataFrame:
         constituencies = gpd.read_file(
