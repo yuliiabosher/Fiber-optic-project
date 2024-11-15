@@ -32,7 +32,7 @@ class Backend:
             self.choropleth_data.append(
                 self.get_choropleth_for_full_fibre_availability(year, n)
             )
-            self.sleep(1)
+            sleep(1)
         '''
         data_dir = "files/data/"
         files = dict(
