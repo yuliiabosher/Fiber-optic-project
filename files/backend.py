@@ -18,7 +18,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import io
 import base64
-
+from time import sleep
 
 #########################
 #                      Backend                              #
@@ -32,6 +32,7 @@ class Backend:
             self.choropleth_data.append(
                 self.get_choropleth_for_full_fibre_availability(year, n)
             )
+            self.sleep(1)
         '''
         data_dir = "files/data/"
         files = dict(

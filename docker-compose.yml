@@ -6,7 +6,6 @@ services:
         context: ./
         dockerfile: dashboard.dockerfile
     privileged: true
-    restart: on-failure
     ports: 
         - "80:80"
 
