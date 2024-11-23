@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import io
 import base64
 from time import sleep
+import csv
 
 #########################
 #                      Backend                              #
@@ -38,20 +39,21 @@ class Backend:
         files = dict(
             postcode=(
                 "%s/ONSPD_FEB_2024_UK/Data/ONSPD_FEB_2024_UK.csv" % data_dir,
-                partial(lambda file: pd.read_csv(file, low_memory=False)),
+                partial(lambda file: pd.read_csv(file, quoting=csv.QUOTE_NONE)),
             ),
             postcode_broadband=(
                 "%s/202401_fixed_postcode_coverage_r01/postcode_files" % data_dir,
                 lambda dir: pd.concat(
                     [pd.read_csv(os.path.join(dir, f)) for f in os.listdir(dir)],
                     ignore_index=True,
+                    quoting=csv.QUOTE_NONE
                 ),
             ),
             pcon_broadband=(
                 "%s/202401_fixed_pcon_coverage_r01/202401_fixed_pcon_coverage_r01.csv"
                 % data_dir,
                 partial(
-                    lambda file: pd.read_csv(file, low_memory=False, encoding="latin-1")
+                    lambda file: pd.read_csv(file,quoting=csv.QUOTE_NONE, encoding="latin-1")
                 ),
             ),
             census_population=(
@@ -59,6 +61,7 @@ class Backend:
                 lambda dir: pd.concat(
                     [pd.read_csv(os.path.join(dir, f)) for f in os.listdir(dir)],
                     ignore_index=True,
+                    quoting=csv.QUOTE_NONE
                 ),
             ),
         )
@@ -105,7 +108,7 @@ class Backend:
         return constituencies[["PCON21CD", "PCON21NM", "geometry"]]
 
     def get_ofcom_full_fibre(self, file: str) -> pd.core.frame.DataFrame:
-        ofcom_df = pd.read_csv(file, encoding="latin")
+        ofcom_df = pd.read_csv(file, quoting=csv.QUOTE_NONE,encoding="latin")
         ofcom_df.rename(
             columns={
                 "parl_const_name": "parliamentary_constituency_name",
