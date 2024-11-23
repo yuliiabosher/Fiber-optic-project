@@ -33,7 +33,7 @@ class Backend:
                 self.get_choropleth_for_full_fibre_availability(year, n)
             )
             sleep(1)
-        '''
+        
         data_dir = "files/data/"
         files = dict(
             postcode=(
@@ -95,7 +95,7 @@ class Backend:
                 df_combined_ONS_OFCOM
             )
         )
-    '''
+    
 
     def get_constituencies(self) -> gpd.geodataframe.GeoDataFrame:
         constituencies = gpd.read_file(
