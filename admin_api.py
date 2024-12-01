@@ -72,7 +72,6 @@ def control_panel(command):
     if command.lower() == "restart":
         #restart service
         commands.append("fuser -kn tcp 8000")
-        commands.append("deactivate")
         commands.append("bash ~/.profile")
     elif command.lower() == "reboot":
         #reboot computer
