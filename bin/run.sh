@@ -8,5 +8,5 @@ cd $home
 git pull origin $branch
 source env/bin/activate
 
-2>/dev/null 1>python admin_api.py 2 &
+python admin_api.py  &
 python app.py
