@@ -4,7 +4,6 @@ flask[async]
 folium
 geopandas
 pandas
-zappa
 matplotlib
 seaborn
-pyopenssl
+flask-basicauth
