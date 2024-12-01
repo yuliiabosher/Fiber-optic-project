@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #pull any updates before starting the server
+sleep 5m
 branch="dashboard-example"
 home=/home/$USER/Fiber-optic-project
 git -C  $home pull origin $branch
