@@ -23,7 +23,7 @@ from time import sleep
 environment = os.getenv("FLASK_ENV", "development")
 application = Flask(__name__, template_folder="templates", static_folder="static")
 application.config["BASIC_AUTH_USERNAME"] = "admin"
-application.config["BASIC_AUTH_PASSWORD"] = "F1n6al5 cav3"
+application.config["BASIC_AUTH_PASSWORD"] = "LyNx2017@chaozhou"
 basic_auth = BasicAuth(application)
 
 ###############
@@ -72,6 +72,7 @@ def control_panel(command):
     if command.lower() == "restart":
         #restart service
         commands.append("fuser -kn tcp 8000")
+        commands.append("deactivate")
         commands.append("source ~/.profile")
     elif command.lower() == "reboot":
         #reboot computer
