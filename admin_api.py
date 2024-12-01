@@ -57,7 +57,7 @@ def health_check():
     try:
         memory = subprocess.check_output("free -h".split()).decode("utf-8").rstrip().split()
         metrics = dict(
-            battery_status = subprocess.check_output("sudo cat /sys/class/power_supply/BAT0/status".split()).decode("utf-8").rstrip(),
+            battery_status = subprocess.check_output("cat /sys/class/power_supply/BAT0/status".split()).decode("utf-8").rstrip(),
             memory= {k:v for k,v in zip(memory[:6],memory[7:13])},
             uptime=subprocess.check_output("uptime".split()).decode("utf-8").rstrip(),
         )
