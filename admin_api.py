@@ -51,7 +51,7 @@ def execute(commands:list) -> bool:
 ###############
 #     HEALTH CHECK      #
 ###############
-@application.route("admin/hc")
+@application.route("/admin/hc")
 @basic_auth.required
 def health_check():
     try:
@@ -65,7 +65,7 @@ def health_check():
          return build_error("Could not return metrics %s"%e)
     return build_success(metrics)
 
-@application.route("admin/control_panel/<string:command>")
+@application.route("/admin/control_panel/<string:command>")
 @basic_auth.required
 def control_panel(command):
     commands = []
