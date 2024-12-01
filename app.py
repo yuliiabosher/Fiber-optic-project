@@ -53,7 +53,7 @@ def health_check():
 ################
 
 
-@application.route("/index")
+@application.route("/dashboard/index")
 def index():
 
     m = folium.Map(
