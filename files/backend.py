@@ -26,14 +26,18 @@ import csv
 #########################
 class Backend:
     def __init__(self):
+        eu_broadband_df=self.get_europe_broadband_data()
+        eu_shp_gdf = self.load_europe_shapefile()
+        self.eu_broadband_geo = self.prepare_eu_gdf(eu_broadband_df, eu_shp_gdf)
+        self.eu_choropleth = self.get_choropleth_for_eu_broadband_with_slider(self.eu_broadband_geo)
         # Short on memory, so lets load everything here so that it is only loaded once, at runtime
         # This will allow the for the page to load quicker too
+        #TODO: move maps to top of app.py to prevent from needing to reload
         self.choropleth_data = []
         for n, year in enumerate(range(2018, 2025)):
             self.choropleth_data.append(
                 self.get_choropleth_for_full_fibre_availability(year, n)
             )
-            sleep(1)
         
         data_dir = "files/data/"
         files = dict(
@@ -97,8 +101,80 @@ class Backend:
                 df_combined_ONS_OFCOM
             )
         )
-        
+    def get_choropleth_for_eu_broadband_with_slider(
+        self, choropleth_data
+    ) -> Optional[folium.plugins.TimeSliderChoropleth]:
+        choropleth_data["year"] = [int(datetime(year, 1, 1).timestamp()) for year in choropleth_data.index.values]
+        choropleth_data.loc[choropleth_data.loc[:]["Country"] == "United Kingdom", "Country"]="uk"
 
+        min_color = choropleth_data["Percentage of households with FTTP availability"].min()
+        max_color = choropleth_data["Percentage of households with FTTP availability"].max()
+
+        cmap = linear.YlOrRd_06.scale(min_color, max_color)
+        choropleth_data["opacity"] = [0.5 for i in range(choropleth_data.shape[0])]
+        choropleth_data["color"] = choropleth_data[
+            "Percentage of households with FTTP availability"
+        ].apply(cmap)
+        
+        gdf = choropleth_data.drop_duplicates("Country")[
+            ["Country", "geometry"]
+        ]
+
+        gdf.set_index("Country", drop=True, inplace=True)
+        grouped_by = choropleth_data.groupby("Country")
+    
+        styledata = dict()
+        for country in gdf.index:
+            print(country)
+            group = grouped_by.get_group(country)
+            group = group[["year", "opacity", "color"]]
+            group.set_index("year", drop=True, inplace=True)
+            styledata[country] = group
+        
+        styledict = {
+            country: data.to_dict(orient="index")
+            for country, data in styledata.items()
+        }
+        choropleth_with_slider = folium.plugins.TimeSliderChoropleth(
+            data=gdf, styledict=styledict
+        )
+        return choropleth_with_slider,cmap
+
+    def check_filepath(self, file: str) -> bool:
+        if not os.path.exists(file):
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), file)
+        return True
+    def prepare_eu_gdf(self,eu_broadband_df, eu_shp_gdf):
+        eu_broadband_geo = eu_broadband_df.merge(eu_shp_gdf, left_on='Country', right_on='NAME_ENGL', how='left')
+        eu_broadband_geo.drop(columns=['NAME_ENGL'],inplace=True)
+        eu_broadband_geo.set_index('Year',inplace=True)
+        return gpd.GeoDataFrame(eu_broadband_geo, geometry='geometry')
+    
+    def load_europe_shapefile(self):
+        country_polygons = gpd.read_file('files/data/CNTR_RG_01M_2024_4326.shp.zip')
+        country_polygons = country_polygons[['NAME_ENGL', 'geometry']]
+        return country_polygons
+        
+    def get_europe_broadband_data(self):
+        eu_broadband = pd.read_excel(
+            'files/data/Broadband_Coverage_in_Europe_2023_Final_dataset_20240905_fymrNtGW8v3HudBU9eUqxiEp30_106734.xlsx', 
+            sheet_name ='Data', skiprows=6
+        )
+        eu_columns = ['Country', 'Metric', 'Geography level', 2018, 2019, 2020, 2021, 2022, 2023]
+        eu_broadband = eu_broadband[eu_columns]
+        eu_broadband_total = eu_broadband.query('`Geography level` == "Total"').query('`Country` != "EU27" & `Country` != "EU28"')
+        eu_broadband_total.drop(columns=['Geography level'],inplace=True)
+        eu_broadband_FTTP_per_household = eu_broadband_total.query('`Metric` == "FTTP" | `Metric` == "Households"')
+        eu_broadband_fttp_melted = eu_broadband_FTTP_per_household.melt(id_vars=[
+            'Country', 'Metric'], var_name='Year', value_name='Number of households')
+        eu_broadband_fttp_pivot = eu_broadband_fttp_melted.pivot(index =['Country', 'Year'], columns='Metric', values = 'Number of households')
+        eu_broadband_fttp_pivot.reset_index(inplace=True)
+        eu_broadband_fttp_pivot.rename_axis(columns=None,inplace=True)
+        eu_broadband_fttp_pivot[
+            'Percentage of households with FTTP availability'
+            ] = eu_broadband_fttp_pivot['FTTP'] / eu_broadband_fttp_pivot['Households'] * 100
+        return eu_broadband_fttp_pivot
+        
     def get_constituencies(self) -> gpd.geodataframe.GeoDataFrame:
         constituencies = gpd.read_file(
             "files/data/Westminster_Parliamentary_Constituencies_Dec_2021_UK_BUC_2022_-8882165546947265805.zip"

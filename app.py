@@ -14,15 +14,16 @@ from flask import (
     after_this_request,
     render_template_string,
 )
+from markupsafe import Markup
 from datetime import datetime, timezone
 import folium
+from branca.element import MacroElement
 from files.backend import Backend
 
 environment = os.getenv("FLASK_ENV", "development")
 application = Flask(__name__, template_folder="templates", static_folder="static")
 
 bkd = Backend()
-
 ###############
 # API Helpers
 ###############
@@ -86,11 +87,42 @@ def index():
     m2.get_root().width = "500px"
     m2.get_root().height = "800px"
     body_html2 = m2.get_root()._repr_html_()
+    
+    m3 = folium.Map(
+        location=[54.7023545, -3.2765753], zoom_start=6, height=800, width=500    )
+    choropleth_with_slider,colorbar1 = bkd.eu_choropleth
+    choropleth_with_slider.add_to(m3)
+    colorbar1.caption = 'Percentage of households with FTTP availability'
+    colorbar1.add_to(m3)
+    
+    m3.get_root().width = "500px"
+    m3.get_root().height = "800px"
+    m3.render()
+    root=m3.get_root()
+    body_html3 = root._repr_html_()
 
     return render_template(
-        "index.html", body_html=body_html, body_html2=body_html2, graphs=bkd.graphs
+        "index.html", body_html=body_html, body_html2=body_html2,map3=body_html3, graphs=bkd.graphs
     )
 
+@application.route("/test")
+def test():
+    
+    m2 = folium.Map(
+        location=[54.7023545, -3.2765753], zoom_start=6, height=800, width=500    )
+    choropleth_with_slider,colorbar1 = bkd.eu_choropleth
+    choropleth_with_slider.add_to(m2)
+    colorbar1.caption = 'Percentage of households with FTTP availability'
+    colorbar1.add_to(m2)
+    #m2.add_child(colorbar1)
+
+    m2.get_root().width = "500px"
+    m2.get_root().height = "800px"
+    m2.render()
+    root=m2.get_root()
+    body_html2 = root._repr_html_()
+    return render_template( "index.html", body_html=body_html2, body_html2=body_html2, graphs=[],
+    )
 
 if __name__ == "__main__":
     application.run(host="0.0.0.0", port=8000, debug=True)
