@@ -79,10 +79,12 @@ def index():
     m2 = folium.Map(
         location=[54.7023545, -3.2765753], zoom_start=6, height=800, width=500
     )
-    choropleth_with_slider = bkd.get_choropleth_for_full_fibre_availability_with_slider(
+    choropleth_with_slider,colorbar = bkd.get_choropleth_for_full_fibre_availability_with_slider(
         bkd.choropleth_data
     )
     choropleth_with_slider.add_to(m2)
+    colorbar.caption = 'Distribution of Fibre in the UK between 2018-2024 by constituency'
+    colorbar.add_to(m2)
 
     m2.get_root().width = "500px"
     m2.get_root().height = "800px"

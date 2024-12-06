@@ -125,7 +125,6 @@ class Backend:
     
         styledata = dict()
         for country in gdf.index:
-            print(country)
             group = grouped_by.get_group(country)
             group = group[["year", "opacity", "color"]]
             group.set_index("year", drop=True, inplace=True)
@@ -349,7 +348,7 @@ class Backend:
         choropleth_with_slider = folium.plugins.TimeSliderChoropleth(
             data=gdf, styledict=styledict
         )
-        return choropleth_with_slider
+        return choropleth_with_slider,cmap
 
     def check_filepath(self, file: str) -> bool:
         if not os.path.exists(file):
