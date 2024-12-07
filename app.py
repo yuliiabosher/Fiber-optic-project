@@ -24,6 +24,14 @@ environment = os.getenv("FLASK_ENV", "development")
 application = Flask(__name__, template_folder="templates", static_folder="static")
 
 bkd = Backend()
+
+visuals = dict(
+    dual_RUC_map = bkd.make_RUC_dualmap(),
+    fibre_distribution_uk_slider = bkd.make_map_of_fibre_distribution_uk(),
+    eu_fttp_slider = bkd.make_eu_fftp_availability_map(),
+    graphs = bkd.graphs
+)
+
 ###############
 # API Helpers
 ###############
@@ -52,79 +60,13 @@ def health_check():
 ################
 # 	   DASHBOARD	   #
 ################
-
-
 @application.route("/")
 def index():
-
-    m = folium.Map(
-        location=[54.7023545, -3.2765753],
-        zoom_start=6,
-        tiles="Cartodb Positron",
-        height=800,
-        width=500,
-    )
-    for n, choropleth_data in enumerate(bkd.choropleth_data):
-
-        if choropleth_data:
-            choropleth = choropleth_data[0]
-            choropleth.add_to(m)
-
-    folium.TileLayer(tiles="Cartodb dark_matter", name="dark").add_to(m)
-    folium.LayerControl().add_to(m)
-    m.get_root().width = "500px"
-    m.get_root().height = "800px"
-    body_html = m.get_root()._repr_html_()
-
-    m2 = folium.Map(
-        location=[54.7023545, -3.2765753], zoom_start=6, height=800, width=500
-    )
-    choropleth_with_slider,colorbar = bkd.get_choropleth_for_full_fibre_availability_with_slider(
-        bkd.choropleth_data
-    )
-    choropleth_with_slider.add_to(m2)
-    colorbar.caption = 'Distribution of Fibre in the UK between 2018-2024 by constituency'
-    colorbar.add_to(m2)
-
-    m2.get_root().width = "500px"
-    m2.get_root().height = "800px"
-    body_html2 = m2.get_root()._repr_html_()
-    
-    m3 = folium.Map(
-        location=[54.7023545, -3.2765753], zoom_start=6, height=800, width=500    )
-    choropleth_with_slider,colorbar1 = bkd.eu_choropleth
-    choropleth_with_slider.add_to(m3)
-    colorbar1.caption = 'Percentage of households with FTTP availability'
-    colorbar1.add_to(m3)
-    
-    m3.get_root().width = "500px"
-    m3.get_root().height = "800px"
-    m3.render()
-    root=m3.get_root()
-    body_html3 = root._repr_html_()
-
-    return render_template(
-        "index.html", body_html=body_html, body_html2=body_html2,map3=body_html3, graphs=bkd.graphs
-    )
+    return render_template("index.html", **visuals)
 
 @application.route("/test")
 def test():
-    
-    m2 = folium.Map(
-        location=[54.7023545, -3.2765753], zoom_start=6, height=800, width=500    )
-    choropleth_with_slider,colorbar1 = bkd.eu_choropleth
-    choropleth_with_slider.add_to(m2)
-    colorbar1.caption = 'Percentage of households with FTTP availability'
-    colorbar1.add_to(m2)
-    #m2.add_child(colorbar1)
-
-    m2.get_root().width = "500px"
-    m2.get_root().height = "800px"
-    m2.render()
-    root=m2.get_root()
-    body_html2 = root._repr_html_()
-    return render_template( "index.html", body_html=body_html2, body_html2=body_html2, graphs=[],
-    )
+    return render_template( "index.html", **visuals)
 
 if __name__ == "__main__":
     application.run(host="0.0.0.0", port=8000, debug=True)
