@@ -26,11 +26,13 @@ application = Flask(__name__, template_folder="templates", static_folder="static
 bkd = Backend()
 
 visuals = dict(
-    dual_RUC_map = bkd.make_RUC_dualmap(),
-    fibre_distribution_uk_slider = bkd.make_map_of_fibre_distribution_uk(),
-    eu_fttp_slider = bkd.make_eu_fftp_availability_map(),
-    graphs = bkd.graphs
+    # dual_RUC_map = bkd.make_RUC_dualmap(),
+    # fibre_distribution_uk_slider = bkd.make_map_of_fibre_distribution_uk(),
+    eu_fttp_slider=bkd.make_eu_fftp_availability_map(),
+    eu_fttp_predictions_slider=bkd.make_eu_fftp_availability_predictions_map(),
+    # graphs = bkd.graphs
 )
+
 
 ###############
 # API Helpers
@@ -64,9 +66,11 @@ def health_check():
 def index():
     return render_template("index.html", **visuals)
 
+
 @application.route("/test")
 def test():
-    return render_template( "index.html", **visuals)
+    return render_template("index.html", **visuals)
+
 
 if __name__ == "__main__":
     application.run(host="0.0.0.0", port=8000, debug=True)
