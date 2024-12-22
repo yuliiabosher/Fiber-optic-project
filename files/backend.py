@@ -45,7 +45,6 @@ class Backend:
                 eu_broadband_predictions_geo, "FTTP", colormap=linear.PuRd_09
             )
         )
-        """
         # Short on memory, so lets load everything here so that it is only loaded once, at runtime
         # This will allow the for the page to load quicker too
         #TODO: move maps to top of app.py to prevent from needing to reload
@@ -119,7 +118,6 @@ class Backend:
         )
         self.RUC_classifications  = self.get_rural_urban_classifications()
         self.constituencies_with_RUC=self.get_constituencies_2022_with_RUC()
-        """
 
     def eu_broadband_predictions(
         self, include_current=False
