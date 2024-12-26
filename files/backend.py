@@ -120,6 +120,46 @@ class Backend:
         self.RUC_classifications = self.get_rural_urban_classifications()
         self.constituencies_with_RUC = self.get_constituencies_2022_with_RUC()
 
+    def clean_and_load_parldf(self, link_to_file: str) -> pd.core.frame.DataFrame:
+        ofcom_df = pd.read_csv(link_to_file, encoding="latin")
+        ofcom_full_fibre_df = ofcom_df[
+            ["parliamentary_constituency_name", "Full Fibre availability (% premises)"]
+        ]
+        if (
+            ofcom_full_fibre_df["parliamentary_constituency_name"]
+            .str.contains("YNYS MÃ”N")
+            .any()
+        ):
+            index = ofcom_full_fibre_df[
+                ofcom_full_fibre_df["parliamentary_constituency_name"].str.contains(
+                    "YNYS MÃ”N"
+                )
+            ].index[0]
+            ofcom_full_fibre_df.loc[index, "parliamentary_constituency_name"] = (
+                "YNYS MÔN"
+            )
+        ofcom_full_fibre_df["parliamentary_constituency_name"] = (
+            ofcom_full_fibre_df["parliamentary_constituency_name"]
+            .str.upper()
+            .str.strip()
+        )
+        return ofcom_full_fibre_df
+
+    def load_ofcom_from_link(self, year: int) -> Optional[pd.core.frame.DataFrame]:
+        link = "https://raw.githubusercontent.com/yuliiabosher/Fiber-optic-project/refs/heads/parliamentary-constituencies"
+        filename = string.Template("${year}${n}_fixed_pcon_coverage_r${r}.csv")
+        files = {
+            2019: filename.substitute(year=2019, n="09", r="01"),
+            2020: filename.substitute(year=2020, n="09", r="01"),
+            2021: filename.substitute(year=2021, n="09", r="01"),
+            2022: filename.substitute(year=2022, n="09", r="02"),
+            2023: filename.substitute(year=2024, n="01", r="01"),
+        }
+        if year not in files:
+            return None
+        link_to_file = os.path.join(link, files[year])
+        return self.clean_and_load_parldf(link_to_file)
+
     def eu_broadband_predictions(
         self, include_current=False
     ) -> pd.core.frame.DataFrame:
@@ -198,6 +238,12 @@ class Backend:
         dfClean = dfClean[columns]
         return dfClean
 
+    def load_ofcom_pcodes(self):
+        linktofile = "https://raw.githubusercontent.com/yuliiabosher/Fiber-optic-project/refs/heads/parliamentary-constituencies/202401_fixed_pcon_coverage_r01.csv"
+        ofcom_df = pd.read_csv(linktofile, encoding="latin")
+        ofcom_pc_codes_df = ofcom_df[["parliamentary_constituency_name", "parl_const"]]
+        return ofcom_pc_codes_df
+
     def fn_calc(
         self,
         df_final: pd.core.frame.DataFrame,
@@ -221,6 +267,42 @@ class Backend:
             df_final["FTTP%s" % year] = values
             df_final["FTTP%s" % year] = df_final["FTTP%s" % year].astype(float)
         return df_final
+
+    def get_choropleth_for_uk_broadband_with_slider(
+        self, choropleth_data, colname, colormap=linear.YlOrRd_06
+    ) -> Optional[folium.plugins.TimeSliderChoropleth]:
+        choropleth_data["year"] = [
+            int(datetime(year, 1, 1).timestamp())
+            for year in choropleth_data.index.values
+        ]
+
+        min_color = choropleth_data[colname].min()
+        max_color = choropleth_data[colname].max()
+
+        cmap = colormap.scale(min_color, max_color)
+        choropleth_data["opacity"] = [0.5 for i in range(choropleth_data.shape[0])]
+        choropleth_data["color"] = choropleth_data[colname].apply(cmap)
+
+        gdf = choropleth_data.drop_duplicates("PCON21CD")[["PCON21CD", "geometry"]]
+
+        gdf.set_index("PCON21CD", drop=True, inplace=True)
+        grouped_by = choropleth_data.groupby("PCON21CD")
+
+        styledata = dict()
+        for country in gdf.index:
+            group = grouped_by.get_group(country)
+            group = group[["year", "opacity", "color"]]
+            group.set_index("year", drop=True, inplace=True)
+            styledata[country] = group
+
+        styledict = {
+            country: data.to_dict(orient="index") for country, data in styledata.items()
+        }
+
+        choropleth_with_slider = folium.plugins.TimeSliderChoropleth(
+            data=gdf, styledict=styledict, date_options="YYYY"
+        )
+        return choropleth_with_slider, cmap
 
     def get_rural_urban_classifications(self):
         fileUrbanRuralClassification = "files/data/pcon_ruc.csv"
@@ -309,7 +391,7 @@ class Backend:
             country: data.to_dict(orient="index") for country, data in styledata.items()
         }
         choropleth_with_slider = folium.plugins.TimeSliderChoropleth(
-            data=gdf, styledict=styledict
+            data=gdf, styledict=styledict, date_options="YYYY"
         )
         return choropleth_with_slider, cmap
 
@@ -330,6 +412,54 @@ class Backend:
         country_polygons = gpd.read_file("files/data/CNTR_RG_01M_2024_4326.shp.zip")
         country_polygons = country_polygons[["NAME_ENGL", "geometry"]]
         return country_polygons
+
+    def prepare_constituency_predictions(self):
+        ofcom_pc_codes_df = self.load_ofcom_pcodes()
+        final_df = None
+        for year in range(2019, 2024):
+            df = self.load_ofcom_from_link(year)
+            if isinstance(df, pd.core.frame.DataFrame):
+                if year == 2024:
+                    # problem with 2024, it should be named 2023 but iremains incorrect
+                    year -= 1
+                df.rename(
+                    columns={"Full Fibre availability (% premises)": "FTTP%s" % year},
+                    inplace=True,
+                )
+                if final_df is not None:
+                    final_df = final_df.merge(
+                        df, on=["parliamentary_constituency_name"], how="inner"
+                    )
+                else:
+                    final_df = df
+
+        final_df = final_df.merge(
+            ofcom_pc_codes_df, on=["parliamentary_constituency_name"], how="inner"
+        )
+        final_df = self.fn_calc(final_df, None, string.Template("FTTP${year}"))
+        final_df.drop(["parliamentary_constituency_name"], axis=1, inplace=True)
+        uk_broadband_fttp_melted = final_df.melt(
+            id_vars=["parl_const"], var_name="Year", value_name="FTTP"
+        )
+        uk_broadband_fttp_melted.reset_index(inplace=True)
+        uk_broadband_fttp_melted.rename_axis(columns=None, inplace=True)
+        uk_broadband_fttp_melted["Year"] = uk_broadband_fttp_melted.Year.str.replace(
+            "FTTP", ""
+        ).astype(int)
+
+        gdf = self.get_constituencies()
+        fibre_by_constituency_geo = uk_broadband_fttp_melted.merge(
+            gdf, right_on="PCON21CD", left_on="parl_const"
+        )
+        fibre_by_constituency_geo.set_index("Year", inplace=True, drop=True)
+        fibre_by_constituency_geo.drop(["PCON21NM", "parl_const"], axis=1, inplace=True)
+        fibre_by_constituency_geo = gpd.GeoDataFrame(
+            fibre_by_constituency_geo, geometry=fibre_by_constituency_geo.geometry
+        )
+        choropleth_data, cmap = self.get_choropleth_for_uk_broadband_with_slider(
+            fibre_by_constituency_geo, "FTTP", colormap=linear.Purples_07
+        )
+        return choropleth_data, cmap
 
     def get_europe_broadband_data(self):
         eu_broadband = pd.read_excel(
@@ -479,7 +609,7 @@ class Backend:
             2020: filename.substitute(year=2020, n="09", r="01"),
             2021: filename.substitute(year=2021, n="09", r="01"),
             2022: filename.substitute(year=2022, n="09", r="02"),
-            2024: filename.substitute(year=2024, n="01", r="01"),
+            2023: filename.substitute(year=2024, n="01", r="01"),
         }
         if year not in files:
             return None
@@ -501,7 +631,7 @@ class Backend:
         self, choropleth_data
     ) -> Optional[folium.plugins.TimeSliderChoropleth]:
         dfs = []
-        years = [2018, 2019, 2020, 2021, 2022, 2024]
+        years = [2018, 2019, 2020, 2021, 2022, 2023]
         for n, year in enumerate(years):
             if choropleth_data[n]:
                 df = choropleth_data[n][1]
@@ -546,7 +676,7 @@ class Backend:
             for constituency, data in styledata.items()
         }
         choropleth_with_slider = folium.plugins.TimeSliderChoropleth(
-            data=gdf, styledict=styledict
+            data=gdf, styledict=styledict, date_options="YYYY"
         )
         return choropleth_with_slider, cmap
 
@@ -1153,6 +1283,33 @@ class Backend:
         m.get_root().html.add_child(
             self.make_map_title(
                 "Prediction for<br>FTTP availability<br>in the EU<br>and the UK",
+                **{"position": "left:1px;bottom:0px"},
+            )
+        )
+        script = """els=document.getElementsByClassName('folium-map');for(var i=0;i<els.length;i++){
+            els[i].style.border='2px solid black';els[i].style.overflow='hidden'};"""
+        self.add_script_to_map(m, script)
+        return m.get_root()._repr_html_()
+
+    def make_map_of_fibre_predictions_uk(self):
+        choropleth_with_slider, colorbar = self.prepare_constituency_predictions()
+
+        m = folium.Map(
+            location=[54.7023545, -3.2765753], zoom_start=6, height=750, width=500
+        )
+        choropleth_with_slider.add_to(m)
+        colorbar.caption = "Distribution of Fibre as a percentage"
+        colorbar.add_to(m)
+        m.get_root().width = "500px"
+        m.get_root().height = "800px"
+        m.render()
+
+        m.save("test.html")
+        m.get_root().width = "500px"
+        m.get_root().height = "800px"
+        m.get_root().html.add_child(
+            self.make_map_title(
+                "Prediction of Fibre<br>in the UK<br>up to 2030<br>by constituency'",
                 **{"position": "left:1px;bottom:0px"},
             )
         )
