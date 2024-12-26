@@ -832,7 +832,6 @@ class Backend:
         m.get_root().height = "800px"
         m.render()
 
-        m.save("test.html")
         m.get_root().width = "500px"
         m.get_root().height = "800px"
         m.get_root().html.add_child(
