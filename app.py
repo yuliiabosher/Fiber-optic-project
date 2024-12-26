@@ -31,7 +31,6 @@ visuals = dict(
     eu_fttp_slider=bkd.make_eu_fftp_availability_map(),
     eu_fttp_predictions_slider=bkd.make_eu_fftp_availability_predictions_map(),
     fibre_distribution_predictions=bkd.make_map_of_fibre_predictions_uk(),
-    # graphs = bkd.graphs
 )
 
 

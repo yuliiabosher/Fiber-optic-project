@@ -34,18 +34,7 @@
 				{{fibre_distribution_predictions|safe}}
 				</div>
 			</div>
-			<div class="row border">
-			{% for graph in graphs %}
-				{% if loop.index%3 == 0 %}
-					</div>
-					<div class="row border">
-				{% endif %}
-				<div class="col p-5 border">
-					{{graph|safe}}
-				</div>
-			{% endfor %}
-		</div>
-	</div>
+			
 		<footer class="d-flex flex-column flex-md-row bg-primary fixed-bottom p-4 border border-warning">
 		</footer>
 		<script>
