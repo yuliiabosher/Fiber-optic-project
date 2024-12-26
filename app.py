@@ -26,11 +26,11 @@ application = Flask(__name__, template_folder="templates", static_folder="static
 bkd = Backend()
 
 visuals = dict(
-    dual_RUC_map = bkd.make_RUC_dualmap(),
-    fibre_distribution_uk_slider = bkd.make_map_of_fibre_distribution_uk(),
+    dual_RUC_map=bkd.make_RUC_dualmap(),
+    fibre_distribution_uk_slider=bkd.make_map_of_fibre_distribution_uk(),
     eu_fttp_slider=bkd.make_eu_fftp_availability_map(),
     eu_fttp_predictions_slider=bkd.make_eu_fftp_availability_predictions_map(),
-    graphs = bkd.graphs
+    # graphs = bkd.graphs
 )
 
 

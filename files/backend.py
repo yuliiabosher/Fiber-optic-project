@@ -47,14 +47,14 @@ class Backend:
         )
         # Short on memory, so lets load everything here so that it is only loaded once, at runtime
         # This will allow the for the page to load quicker too
-        #TODO: move maps to top of app.py to prevent from needing to reload
+        # TODO: move maps to top of app.py to prevent from needing to reload
         self.choropleth_data = []
         for n, year in enumerate(range(2018, 2025)):
             self.choropleth_data.append(
                 self.get_choropleth_for_full_fibre_availability(year, n)
             )
-        
-        data_dir = "files/data/"
+
+        """data_dir = "files/data/"
         files = dict(
             postcode=(
                 "%s/ONSPD_FEB_2024_UK/Data/ONSPD_FEB_2024_UK.csv" % data_dir,
@@ -116,8 +116,9 @@ class Backend:
                 df_combined_ONS_OFCOM
             )
         )
-        self.RUC_classifications  = self.get_rural_urban_classifications()
-        self.constituencies_with_RUC=self.get_constituencies_2022_with_RUC()
+        """
+        self.RUC_classifications = self.get_rural_urban_classifications()
+        self.constituencies_with_RUC = self.get_constituencies_2022_with_RUC()
 
     def eu_broadband_predictions(
         self, include_current=False
@@ -129,7 +130,9 @@ class Backend:
         cols = ["Country", "Metric", "URClass"]
         dfEuropeCleanFTTP = dfEuropeClean.query('Metric == "FTTP"')
 
-        df_final_total = self.fn_calc(dfEuropeCleanFTTP, "Total")
+        df_final_total = self.fn_calc(
+            dfEuropeCleanFTTP, "Total", string.Template("${year}%")
+        )
 
         for year in range(2024, 2031):
             df_final_total[f"FTTP{year}"].replace(np.nan, 0, inplace=True)
@@ -196,14 +199,19 @@ class Backend:
         return dfClean
 
     def fn_calc(
-        self, df_final: pd.core.frame.DataFrame, urclass: str
+        self,
+        df_final: pd.core.frame.DataFrame,
+        urclass: Optional[str],
+        row_template: str,
     ) -> pd.core.frame.DataFrame:
         if urclass:
             df_final = df_final.query('URClass == "' + urclass + '"')
         catalogue_of_values = {year: [] for year in range(2024, 2031)}
         first_year = 2019
         for _, row in df_final.iterrows():
-            rows = row["2019%"], row["2020%"], row["2021%"], row["2022%"], row["2023%"]
+            rows = [
+                row[row_template.substitute(year=year)] for year in range(2019, 2024)
+            ]
             beta0, beta1 = self.fn_predict_five_year(rows)
             for year in catalogue_of_values.keys():
                 x_year = year - first_year
