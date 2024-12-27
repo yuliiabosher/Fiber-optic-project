@@ -135,6 +135,9 @@ class Backend:
         eu_broadband_fttp_pivot.reset_index(inplace=True)
         eu_broadband_fttp_pivot.rename_axis(columns=None, inplace=True)
         eu_broadband_fttp_pivot["Year"] = eu_broadband_fttp_pivot.Year.astype(int)
+        eu_broadband_fttp_pivot.FTTP = eu_broadband_fttp_pivot.FTTP.apply(
+            self.reduce_to_100
+        )
         return eu_broadband_fttp_pivot
 
     def fn_predict_five_year(self, yearly_values: list) -> Tuple[int]:
@@ -237,7 +240,7 @@ class Backend:
         }
 
         choropleth_with_slider = folium.plugins.TimeSliderChoropleth(
-            data=gdf, styledict=styledict, date_options="YYYY"
+            data=gdf, styledict=styledict, date_options="YYYY", highlight=True
         )
         return choropleth_with_slider, cmap
 
@@ -328,7 +331,7 @@ class Backend:
             country: data.to_dict(orient="index") for country, data in styledata.items()
         }
         choropleth_with_slider = folium.plugins.TimeSliderChoropleth(
-            data=gdf, styledict=styledict, date_options="YYYY"
+            data=gdf, styledict=styledict, date_options="YYYY", highlight=True
         )
         return choropleth_with_slider, cmap
 
@@ -350,7 +353,7 @@ class Backend:
         country_polygons = country_polygons[["NAME_ENGL", "geometry"]]
         return country_polygons
 
-    def prepare_constituency_predictions(self):
+    def prepare_constituency_predictions(self, include_current=True):
         ofcom_pc_codes_df = self.load_ofcom_pcodes()
         final_df = None
         for year in range(2019, 2024):
@@ -383,10 +386,21 @@ class Backend:
         uk_broadband_fttp_melted["Year"] = uk_broadband_fttp_melted.Year.str.replace(
             "FTTP", ""
         ).astype(int)
+        if include_current == False:
+            uk_broadband_fttp_melted.drop(
+                uk_broadband_fttp_melted.loc[
+                    uk_broadband_fttp_melted.Year.isin(range(2018, 2024))
+                ].index,
+                axis=0,
+                inplace=True,
+            )
 
         gdf = self.get_constituencies()
         fibre_by_constituency_geo = uk_broadband_fttp_melted.merge(
             gdf, right_on="PCON21CD", left_on="parl_const"
+        )
+        fibre_by_constituency_geo["FTTP"] = fibre_by_constituency_geo.FTTP.apply(
+            self.reduce_to_100
         )
         fibre_by_constituency_geo.set_index("Year", inplace=True, drop=True)
         fibre_by_constituency_geo.drop(["PCON21NM", "parl_const"], axis=1, inplace=True)
@@ -397,6 +411,11 @@ class Backend:
             fibre_by_constituency_geo, "FTTP", colormap=linear.Purples_07
         )
         return choropleth_data, cmap
+
+    def reduce_to_100(self, value):
+        if value > 100:
+            return 100
+        return value
 
     def get_europe_broadband_data(self):
         eu_broadband = pd.read_excel(
@@ -613,7 +632,7 @@ class Backend:
             for constituency, data in styledata.items()
         }
         choropleth_with_slider = folium.plugins.TimeSliderChoropleth(
-            data=gdf, styledict=styledict, date_options="YYYY"
+            data=gdf, styledict=styledict, date_options="YYYY", highlight=True
         )
         return choropleth_with_slider, cmap
 
@@ -758,8 +777,8 @@ class Backend:
             )
         )
         choropleth_with_slider.add_to(m)
-        colorbar.caption = "Distribution of Fibre as a percentage"
         colorbar.add_to(m)
+        m.render()
         m.get_root().width = "500px"
         m.get_root().height = "800px"
         m.get_root().html.add_child(
@@ -775,39 +794,41 @@ class Backend:
 
     def make_eu_fftp_availability_map(self):
         m = folium.Map(
-            location=[55.670249, 10.3333283], zoom_start=4, height=800, width=500
+            location=[55.670249, 10.3333283], zoom_start=4, height=750, width=500
         )
         choropleth_with_slider, colorbar1 = self.eu_choropleth
         choropleth_with_slider.add_to(m)
-        colorbar1.caption = "Percentage of households with FTTP availability"
         colorbar1.add_to(m)
+        m.render()
         m.get_root().width = "500px"
         m.get_root().height = "800px"
-        m.render()
+
         m.get_root().html.add_child(
             self.make_map_title(
                 "Comparison between<br>FTTP availability<br>in the EU<br>and the UK",
                 **{"position": "left:1px;bottom:0px"},
             )
         )
-        script = """els=document.getElementsByClassName('folium-map');for(var i=0;i<els.length;i++){
-            els[i].style.border='2px solid black';els[i].style.overflow='hidden'};"""
-        self.add_script_to_map(m, script)
+        scripts = [
+            """els=document.getElementsByClassName('folium-map');for(var i=0;i<els.length;i++){
+            els[i].style.border='2px solid black';els[i].style.overflow='hidden'};""",
+            """document.getElementById('legend').fontSize='30px';""",
+        ]
+        for script in scripts:
+            self.add_script_to_map(m, script)
         return m.get_root()._repr_html_()
 
     def make_eu_fftp_availability_predictions_map(self):
         m = folium.Map(
-            location=[55.670249, 10.3333283], zoom_start=4, height=800, width=500
+            location=[55.670249, 10.3333283], zoom_start=4, height=750, width=500
         )
         choropleth_with_slider, colorbar1 = self.eu_choropleth_predictions
         choropleth_with_slider.add_to(m)
-        colorbar1.caption = (
-            "Prediction Of Percentage of households with FTTP availability"
-        )
         colorbar1.add_to(m)
+        m.render()
         m.get_root().width = "500px"
         m.get_root().height = "800px"
-        m.render()
+
         m.get_root().html.add_child(
             self.make_map_title(
                 "Prediction for<br>FTTP availability<br>in the EU<br>and the UK",
@@ -820,16 +841,15 @@ class Backend:
         return m.get_root()._repr_html_()
 
     def make_map_of_fibre_predictions_uk(self):
-        choropleth_with_slider, colorbar = self.prepare_constituency_predictions()
+        choropleth_with_slider, colorbar = self.prepare_constituency_predictions(
+            include_current=False
+        )
 
         m = folium.Map(
             location=[54.7023545, -3.2765753], zoom_start=6, height=750, width=500
         )
         choropleth_with_slider.add_to(m)
-        colorbar.caption = "Distribution of Fibre as a percentage"
         colorbar.add_to(m)
-        m.get_root().width = "500px"
-        m.get_root().height = "800px"
         m.render()
 
         m.get_root().width = "500px"
