@@ -8,5 +8,6 @@ cd $home
 git pull origin $branch
 source env/bin/activate
 
+fuser -kn tcp 8000
 python admin_api.py  &
 python app.py
