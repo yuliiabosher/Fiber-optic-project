@@ -1,0 +1,10 @@
+werkzeug
+numpy
+flask[async]
+folium
+geopandas
+pandas
+matplotlib
+seaborn
+flask-basicauth
+openpyxl

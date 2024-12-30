@@ -1,0 +1,9 @@
+version: '2.1'
+
+services:
+
+  nginx:
+    build: ./nginx
+    ports:
+      - 80:80
+
