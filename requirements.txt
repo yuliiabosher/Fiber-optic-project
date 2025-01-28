@@ -8,3 +8,4 @@ matplotlib
 seaborn
 flask-basicauth
 openpyxl
+boto3
