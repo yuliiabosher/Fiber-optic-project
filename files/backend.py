@@ -783,7 +783,7 @@ class Backend:
         m.get_root().height = "800px"
         m.get_root().html.add_child(
             self.make_map_title(
-                "Distribution of Fibre<br>in the UK<br>between 2018-2024<br>by constituency'",
+                "FTTP availability <br>in the UK<br>between 2018-2024<br>by constituency'",
                 **{"position": "left:1px;bottom:0px"},
             )
         )
@@ -856,7 +856,7 @@ class Backend:
         m.get_root().height = "800px"
         m.get_root().html.add_child(
             self.make_map_title(
-                "Prediction of Fibre<br>in the UK<br>up to 2030<br>by constituency'",
+                "Prediction of FTTP availability<br>in the UK<br>up to 2030<br>by constituency'",
                 **{"position": "left:1px;bottom:0px"},
             )
         )
